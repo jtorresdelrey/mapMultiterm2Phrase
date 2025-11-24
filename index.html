@@ -159,8 +159,8 @@
                             Nivel término (langSet)
                         </h3>
                         <select id="phrase-lang-selector" onchange="updateUI()" class="p-2 border border-green-300 rounded-lg text-sm bg-white font-semibold">
-                            <option value="es">Español (ES)</option>
                             <option value="en">Inglés (EN)</option>
+                            <option value="es">Español (ES)</option>
                         </select>
                     </div>
 
@@ -170,7 +170,7 @@
                             <!-- Los campos fijos de Término de Phrase se generarán aquí -->
                         </div>
                         <div class="mt-4 p-3 bg-red-50 text-red-800 text-xs rounded border border-red-200" id="phrase-lang-note">
-                            Visualizando el bloque de idioma <b>Español (ES)</b>.
+                            Visualizando el bloque de idioma <b>Inglés (EN)</b>.
                         </div>
                     </div>
                 </div>
@@ -297,7 +297,7 @@
             
             // Obtener el idioma seleccionado
             const langSelector = document.getElementById('phrase-lang-selector');
-            const selectedLang = langSelector ? langSelector.value : 'es';
+            const selectedLang = langSelector ? langSelector.value : 'en'; // PRIMARIO AHORA ES 'EN'
             
             renderPhraseFields(phraseData, selectedLang);
             updateMultitermMappingView(mapping);
@@ -341,8 +341,8 @@
                  }
              });
 
-
-            ['Concepto', 'Idioma (ES)', 'Término (ES)', 'Idioma (EN)', 'Término (EN)'].forEach(level => {
+            // Cambiamos el orden de renderizado a EN primero
+            ['Concepto', 'Idioma (EN)', 'Término (EN)', 'Idioma (ES)', 'Término (ES)'].forEach(level => {
                  const fields = groups[level] || [];
                  if (fields.length === 0) return;
 
