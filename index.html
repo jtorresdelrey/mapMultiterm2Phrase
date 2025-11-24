@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Mapeo: Multiterm a Phrase</title>
+    <title>Simulador de mapeo: Multiterm a Phrase</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Paleta de colores "Calm Harmony" */
@@ -79,7 +79,7 @@
         <!-- 1. Encabezado y Objetivo -->
         <header class="mb-8">
             <h1 class="text-3xl md:text-4xl font-bold text-[--text-dark] mb-2">
-                Simulador de Mapeo de Estructuras Terminológicas
+                Simulador de mapeo de estructuras terminológicas
             </h1>
             <p class="text-lg text-[--text-light]">
                 De la flexibilidad de <span class="font-bold text-[#34495e]">RWS Multiterm</span> a la estructura fija de <span class="font-bold text-[#008f58]">Phrase TMS</span>.
@@ -88,7 +88,7 @@
 
         <!-- 2. Contexto Pedagógico -->
         <div class="mb-8 p-5 bg-white rounded-xl shadow-sm border border-[--border-color]">
-            <h2 class="text-xl font-bold mb-3 text-[--text-dark]">Objetivo del Simulador</h2>
+            <h2 class="text-xl font-bold mb-3 text-[--text-dark]">Objetivo del simulador</h2>
             <p class="text-gray-700 mb-4">
                 Esta herramienta te permite diseñar tu ficha de Multiterm y ver en tiempo real cómo se "traduciría" a la estructura fija de Phrase. 
                 El reto clave es el **"aplanamiento"**: Multiterm tiene 3 niveles (Concepto, Idioma, Término) y campos anidados, mientras que Phrase solo tiene 2 (Concepto, Término).
@@ -100,16 +100,16 @@
 
         <!-- 3. Panel de Control de Simulación -->
         <div class="mb-6 p-5 bg-white rounded-xl shadow-sm border border-[--border-color]">
-            <h3 class="text-lg font-bold mb-3">Añadir Campo Personalizado a Multiterm</h3>
+            <h3 class="text-lg font-bold mb-3">Añadir campo personalizado a Multiterm</h3>
             <div class="flex flex-wrap gap-4">
                 <input type="text" id="newFieldName" placeholder="Nombre del campo (ej. Revisado por)" class="flex-grow p-3 border border-[--border-color] rounded-lg focus:ring-2 focus:ring-[--multiterm-header] outline-none">
                 <select id="newFieldLevel" class="p-3 border border-[--border-color] rounded-lg bg-white focus:ring-2 focus:ring-[--multiterm-header] outline-none">
-                    <option value="Concepto">Nivel Concepto</option>
-                    <option value="Idioma">Nivel Idioma</option>
-                    <option value="Término" selected>Nivel Término</option>
+                    <option value="Concepto">Nivel concepto</option>
+                    <option value="Idioma">Nivel idioma</option>
+                    <option value="Término" selected>Nivel término</option>
                 </select>
                 <button onclick="addField()" class="py-3 px-5 bg-[--multiterm-header] text-white font-bold rounded-lg hover:bg-opacity-80 transition-colors">
-                    Añadir Campo
+                    Añadir campo
                 </button>
             </div>
         </div>
@@ -123,7 +123,7 @@
             <div class="bg-white rounded-xl shadow-lg border border-[--border-color] overflow-hidden flex flex-col">
                 <!-- Encabezado de la Tarjeta -->
                 <div class="p-5 bg-[--multiterm-header] text-white">
-                    <h2 class="text-2xl font-bold">1. RWS Multiterm (Origen)</h2>
+                    <h2 class="text-2xl font-bold">1. RWS Multiterm (origen)</h2>
                     <p class="text-sm opacity-90">Estructura flexible de 3+ niveles. (Editable)</p>
                 </div>
                 
@@ -139,7 +139,7 @@
             <div class="bg-white rounded-xl shadow-lg border border-[--border-color] overflow-hidden flex flex-col">
                 <!-- Encabezado de la Tarjeta -->
                 <div class="p-5 bg-[--phrase-header] text-white">
-                    <h2 class="text-2xl font-bold">2. Phrase TMS (Destino)</h2>
+                    <h2 class="text-2xl font-bold">2. Phrase TMS (destino)</h2>
                     <p class="text-sm opacity-90">Estructura fija de 2 niveles. (Resultado automático)</p>
                 </div>
 
@@ -147,7 +147,7 @@
                 <div class="p-5 space-y-4 bg-[--phrase-bg]">
                     <!-- Campos de Nivel Concepto (Fijos) -->
                     <div class="mb-4">
-                        <h3 class="text-sm font-bold uppercase text-[--text-light] mb-2 border-b border-green-200 pb-1">Nivel Concepto (termEntry)</h3>
+                        <h3 class="text-sm font-bold uppercase text-[--text-light] mb-2 border-b border-green-200 pb-1">Nivel concepto (termEntry)</h3>
                         <div id="phrase-concept-fields" class="space-y-3">
                             <!-- Los campos fijos de Concepto de Phrase se generarán aquí -->
                         </div>
@@ -156,7 +156,7 @@
                     <!-- Selector de Idioma para langSet -->
                     <div class="flex items-center justify-between mb-4 pt-4 border-t border-green-200">
                         <h3 class="text-sm font-bold uppercase text-[--text-light]">
-                            Nivel Término (langSet)
+                            Nivel término (langSet)
                         </h3>
                         <select id="phrase-lang-selector" onchange="updateUI()" class="p-2 border border-green-300 rounded-lg text-sm bg-white font-semibold">
                             <option value="es">Español (ES)</option>
@@ -170,7 +170,7 @@
                             <!-- Los campos fijos de Término de Phrase se generarán aquí -->
                         </div>
                         <div class="mt-4 p-3 bg-red-50 text-red-800 text-xs rounded border border-red-200" id="phrase-lang-note">
-                            Visualizando el bloque de idioma **Español (ES)**.
+                            Visualizando el bloque de idioma <b>Español (ES)</b>.
                         </div>
                     </div>
                 </div>
@@ -180,16 +180,16 @@
 
         <!-- 5. Resumen de Mapeo Crítico -->
         <div class="mt-8 p-5 bg-[--warning-bg] rounded-xl shadow-sm border border-[--warning-border]">
-            <h2 class="text-xl font-bold mb-3 text-[--warning-text]">Mapeos Críticos y Consecuencias</h2>
+            <h2 class="text-xl font-bold mb-3 text-[--warning-text]">Mapeos críticos y consecuencias</h2>
             <ul class="list-disc list-inside space-y-2 text-gray-800">
                 <li>
-                    <span class="font-bold">Aplanamiento (Nivel 2 -> Nivel 3):</span> Campos del "Nivel Idioma" de Multiterm (como "Nota de Idioma") no tienen un lugar en Phrase. Se "aplanan" y se añaden a la <span class="font-medium p-1 rounded bg-gray-200 text-sm">Nota del término</span>.
+                    <span class="font-bold">Aplanamiento (nivel 2 -> nivel 3):</span> Campos del "Nivel idioma" de Multiterm (como "Nota de idioma") no tienen un lugar en Phrase. Se "aplanan" y se añaden a la <span class="font-medium p-1 rounded bg-gray-200 text-sm">Nota del término</span>.
                 </li>
                 <li>
-                    <span class="font-bold">Fusión (Subordinación):</span> Campos subordinados de Multiterm (como "Fuente" de "Contexto") se fusionan. El simulador los concatenará dentro del campo <span class="font-medium p-1 rounded bg-gray-200 text-sm">usageNote (Uso)</span> de Phrase.
+                    <span class="font-bold">Fusión (subordinación):</span> Campos subordinados de Multiterm (como "Fuente" de "Contexto") se fusionan. El simulador los concatenará dentro del campo <span class="font-medium p-1 rounded bg-gray-200 text-sm">usageNote (Uso)</span> de Phrase.
                 </li>
                 <li>
-                    <span class="font-bold">El "Cajón de Sastre":</span> Cualquier campo personalizado de Multiterm que no tenga un equivalente 1:1 en Phrase (como "Revisado por") será añadido a la <span class="font-medium p-1 rounded bg-gray-200 text-sm">Nota del término</span>, perdiendo su estructura.
+                    <span class="font-bold">El "cajón de sastre":</span> Cualquier campo personalizado de Multiterm que no tenga un equivalente 1:1 en Phrase (como "Revisado por") será añadido a la <span class="font-medium p-1 rounded bg-gray-200 text-sm">Nota del término</span>, perdiendo su estructura.
                 </li>
             </ul>
         </div>
