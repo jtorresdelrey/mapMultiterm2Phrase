@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Mapeo: Multiterm a Phrase</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Paleta de colores "Calm Harmony" */
+        :root {
+            --bg-light: #f8f7f4; /* Blanco roto/Beige muy claro */
+            --text-dark: #2c3e50; /* Gris azulado oscuro */
+            --text-light: #7f8c8d; /* Gris claro */
+            --border-color: #e0e0e0; /* Gris suave */
+            
+            /* Colores de las herramientas */
+            --multiterm-bg: #f0f4f9; /* Azul pálido */
+            --multiterm-header: #34495e; /* Azul oscuro/corporativo */
+            --phrase-bg: #effaf5; /* Verde pálido */
+            --phrase-header: #008f58; /* Verde Phrase */
+
+            --warning-bg: #fffbe6; /* Amarillo pálido */
+            --warning-border: #fde047; /* Amarillo */
+            --warning-text: #854d0e; /* Marrón */
+
+            --custom-bg: #fffbe6; /* Amarillo pálido para campos personalizados */
+            --custom-border: #fde047;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        
+        .field-row {
+            transition: all 0.2s ease-in-out;
+        }
+        .field-row:hover {
+            transform: scale(1.01);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        /* Ocultar flechas en input[type=number] */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+    <!-- Chosen Palette: Calm Harmony (Beige, Azules, Verdes) -->
+    <!-- Application Structure Plan: Se ha diseñado una SPA interactiva de dos columnas (side-by-side). 
+         Columna 1: Simulador de Multiterm (flexible, 3+ niveles). Permite al usuario AÑADIR campos personalizados a cualquier nivel (Concepto, Idioma, Término) y AÑADIR campos subordinados (ej. Fuente). 
+         Columna 2: Simulador de Phrase (fijo, 2 niveles). Esta columna NO es editable. Muestra en TIEMPO REAL el resultado del mapeo de los datos introducidos en Multiterm. Se ha añadido un selector de idioma para visualizar la estructura langSet (ES o EN).
+         El flujo interactivo es el núcleo: el usuario escribe en la izquierda y ve las consecuencias (fusión de campos, aplanamiento de niveles, campos en 'termNote') en la derecha. Esto aborda directamente la solicitud del usuario de "visualizar variables" y "hacer pruebas de correspondencias".
+    -->
+    <!-- Visualization & Content Choices: 
+         - Report Info: Diferencia estructural Multiterm (3 niveles, flexible, anidado) vs. Phrase (2 niveles, fijo, plano).
+         - Goal: Enseñar cómo la información de Multiterm se "aplana", "fusiona" o "pierde" al migrar a Phrase.
+         - Viz/Presentation: Diagrama interactivo de dos columnas (HTML/Tailwind). No se usa SVG ni Canvas, ya que la estructura se representa mejor con HTML semántico.
+         - Interaction: 
+            1. Inputs de texto/select en la columna de Multiterm.
+            2. Botón "Añadir Campo Personalizado" con selección de nivel (Concepto, Idioma, Término).
+            3. Botón "Añadir Sub-campo" (para simular subordinación, ej. Fuente de Contexto).
+            4. Selector de idioma para conmutar la visualización del langSet en Phrase (ES/EN).
+            5. Actualización en tiempo real de la columna de Phrase (JS).
+         - Justification: Este método de simulación es la forma más directa y efectiva de permitir a los estudiantes "hacer pruebas" y visualizar las consecuencias del mapeo, que es el objetivo pedagógico principal.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        
+        <!-- 1. Encabezado y Objetivo -->
+        <header class="mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-[--text-dark] mb-2">
+                Simulador de Mapeo de Estructuras Terminológicas
+            </h1>
+            <p class="text-lg text-[--text-light]">
+                De la flexibilidad de <span class="font-bold text-[#34495e]">RWS Multiterm</span> a la estructura fija de <span class="font-bold text-[#008f58]">Phrase TMS</span>.
+            </p>
+        </header>
+
+        <!-- 2. Contexto Pedagógico -->
+        <div class="mb-8 p-5 bg-white rounded-xl shadow-sm border border-[--border-color]">
+            <h2 class="text-xl font-bold mb-3 text-[--text-dark]">Objetivo del Simulador</h2>
+            <p class="text-gray-700 mb-4">
+                Esta herramienta te permite diseñar tu ficha de Multiterm y ver en tiempo real cómo se "traduciría" a la estructura fija de Phrase. 
+                El reto clave es el **"aplanamiento"**: Multiterm tiene 3 niveles (Concepto, Idioma, Término) y campos anidados, mientras que Phrase solo tiene 2 (Concepto, Término).
+            </p>
+            <p class="text-gray-700">
+                Tu objetivo es planificar una estructura en Multiterm que sea lo más compatible posible con Phrase, asegurando que los datos críticos (contexto, fuentes, etc.) no pierdan su valor al migrar.
+            </p>
+        </div>
+
+        <!-- 3. Panel de Control de Simulación -->
+        <div class="mb-6 p-5 bg-white rounded-xl shadow-sm border border-[--border-color]">
+            <h3 class="text-lg font-bold mb-3">Añadir Campo Personalizado a Multiterm</h3>
+            <div class="flex flex-wrap gap-4">
+                <input type="text" id="newFieldName" placeholder="Nombre del campo (ej. Revisado por)" class="flex-grow p-3 border border-[--border-color] rounded-lg focus:ring-2 focus:ring-[--multiterm-header] outline-none">
+                <select id="newFieldLevel" class="p-3 border border-[--border-color] rounded-lg bg-white focus:ring-2 focus:ring-[--multiterm-header] outline-none">
+                    <option value="Concepto">Nivel Concepto</option>
+                    <option value="Idioma">Nivel Idioma</option>
+                    <option value="Término" selected>Nivel Término</option>
+                </select>
+                <button onclick="addField()" class="py-3 px-5 bg-[--multiterm-header] text-white font-bold rounded-lg hover:bg-opacity-80 transition-colors">
+                    Añadir Campo
+                </button>
+            </div>
+        </div>
+
+        <!-- 4. El Simulador (Grid de 2 Columnas) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+
+            <!-- ============================================= -->
+            <!--            COLUMNA 1: RWS MULTITERM           -->
+            <!-- ============================================= -->
+            <div class="bg-white rounded-xl shadow-lg border border-[--border-color] overflow-hidden flex flex-col">
+                <!-- Encabezado de la Tarjeta -->
+                <div class="p-5 bg-[--multiterm-header] text-white">
+                    <h2 class="text-2xl font-bold">1. RWS Multiterm (Origen)</h2>
+                    <p class="text-sm opacity-90">Estructura flexible de 3+ niveles. (Editable)</p>
+                </div>
+                
+                <!-- Contenedor de Campos -->
+                <div class="p-5 space-y-4" id="multiterm-fields-container">
+                    <!-- Los campos de Multiterm se generarán aquí por JS -->
+                </div>
+            </div>
+
+            <!-- ============================================= -->
+            <!--              COLUMNA 2: PHRASE TMS            -->
+            <!-- ============================================= -->
+            <div class="bg-white rounded-xl shadow-lg border border-[--border-color] overflow-hidden flex flex-col">
+                <!-- Encabezado de la Tarjeta -->
+                <div class="p-5 bg-[--phrase-header] text-white">
+                    <h2 class="text-2xl font-bold">2. Phrase TMS (Destino)</h2>
+                    <p class="text-sm opacity-90">Estructura fija de 2 niveles. (Resultado automático)</p>
+                </div>
+
+                <!-- Contenedor de Campos -->
+                <div class="p-5 space-y-4 bg-[--phrase-bg]">
+                    <!-- Campos de Nivel Concepto (Fijos) -->
+                    <div class="mb-4">
+                        <h3 class="text-sm font-bold uppercase text-[--text-light] mb-2 border-b border-green-200 pb-1">Nivel Concepto (termEntry)</h3>
+                        <div id="phrase-concept-fields" class="space-y-3">
+                            <!-- Los campos fijos de Concepto de Phrase se generarán aquí -->
+                        </div>
+                    </div>
+                    
+                    <!-- Selector de Idioma para langSet -->
+                    <div class="flex items-center justify-between mb-4 pt-4 border-t border-green-200">
+                        <h3 class="text-sm font-bold uppercase text-[--text-light]">
+                            Nivel Término (langSet)
+                        </h3>
+                        <select id="phrase-lang-selector" onchange="updateUI()" class="p-2 border border-green-300 rounded-lg text-sm bg-white font-semibold">
+                            <option value="es">Español (ES)</option>
+                            <option value="en">Inglés (EN)</option>
+                        </select>
+                    </div>
+
+                    <!-- Campos de Nivel Término (Dinámicos) -->
+                    <div>
+                        <div id="phrase-term-fields" class="space-y-3">
+                            <!-- Los campos fijos de Término de Phrase se generarán aquí -->
+                        </div>
+                        <div class="mt-4 p-3 bg-red-50 text-red-800 text-xs rounded border border-red-200" id="phrase-lang-note">
+                            Visualizando el bloque de idioma **Español (ES)**.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div> <!-- Fin del Grid -->
+
+        <!-- 5. Resumen de Mapeo Crítico -->
+        <div class="mt-8 p-5 bg-[--warning-bg] rounded-xl shadow-sm border border-[--warning-border]">
+            <h2 class="text-xl font-bold mb-3 text-[--warning-text]">Mapeos Críticos y Consecuencias</h2>
+            <ul class="list-disc list-inside space-y-2 text-gray-800">
+                <li>
+                    <span class="font-bold">Aplanamiento (Nivel 2 -> Nivel 3):</span> Campos del "Nivel Idioma" de Multiterm (como "Nota de Idioma") no tienen un lugar en Phrase. Se "aplanan" y se añaden a la <span class="font-medium p-1 rounded bg-gray-200 text-sm">Nota del término</span>.
+                </li>
+                <li>
+                    <span class="font-bold">Fusión (Subordinación):</span> Campos subordinados de Multiterm (como "Fuente" de "Contexto") se fusionan. El simulador los concatenará dentro del campo <span class="font-medium p-1 rounded bg-gray-200 text-sm">usageNote (Uso)</span> de Phrase.
+                </li>
+                <li>
+                    <span class="font-bold">El "Cajón de Sastre":</span> Cualquier campo personalizado de Multiterm que no tenga un equivalente 1:1 en Phrase (como "Revisado por") será añadido a la <span class="font-medium p-1 rounded bg-gray-200 text-sm">Nota del término</span>, perdiendo su estructura.
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Botón de Reinicio (Añadido con ID para manejo seguro de eventos) -->
+        <div class="flex justify-center mt-6">
+             <button id="reset-all-data" class="px-4 py-2 bg-white border border-gray-300 shadow-sm text-gray-700 rounded-lg hover:bg-gray-50 flex items-center gap-2">
+                Reiniciar valores por defecto
+             </button>
+        </div>
+
+
+    </div> <!-- Fin del Contenedor Principal -->
+
+
+    <script>
+        // --- 1. DEFINICIÓN DE ESTRUCTURAS ---
+
+        // Mapeo de valores literales de Multiterm a códigos TBX (según Phrase)
+        const VALUE_MAP = {
+            'Sustantivo': 'noun',
+            'Verbo': 'verb',
+            'Adjetivo': 'adjective',
+            'Adverbio': 'adverb',
+            'Interjección': 'interjection',
+            'Preposición': 'preposition',
+            'Determinante': 'determiner',
+            'Conjunción': 'conjunction',
+            'Nombre propio': 'proper noun',
+            'Frase verbal': 'verb phrase',
+            'Frase nominal': 'noun phrase',
+            // Valores en inglés para Multiterm de EN
+            'Noun': 'noun',
+            'Verb': 'verb',
+            'Adjective': 'adjective',
+            'Adverb': 'adverb',
+            'Interjection': 'interjection',
+            'Preposition': 'preposition',
+            'Determiner': 'determiner',
+            'Conjunction': 'conjunction',
+            'Proper noun': 'proper noun',
+            'Verb phrase': 'verb phrase',
+            'Noun phrase': 'noun phrase',
+             // Valores de estado
+            'Aprobado (listo)': 'Approved',
+            'Pendiente (nuevo)': 'New',
+            'Prohibido (no usar)': 'Forbidden',
+            'Sí': 'true',
+            'No': 'false'
+        };
+
+        // Estado inicial de la base de datos de Multiterm (flexible)
+        let multitermFields = [
+            { id: 'mt_cid', name: 'ID Concepto', level: 'Concepto', type: 'number', value: '1001', isDefault: true },
+            { id: 'mt_domain', name: 'Área Temática', level: 'Concepto', type: 'select', value: 'Tecnología', options: ['Tecnología', 'Medicina'], isDefault: true }, // Nuevo campo Dominio
+            { id: 'mt_def', name: 'Definición', level: 'Concepto', type: 'textarea', value: 'Definición a nivel de concepto.', isDefault: true },
+            
+            // ES - Nivel Idioma/Término
+            { id: 'mt_note_lang_es', name: 'Nota de Idioma', level: 'Idioma', type: 'text', value: 'Nota solo para este idioma.', isDefault: true },
+            { id: 'mt_term_es', name: 'Término', level: 'Término', type: 'text', value: 'Gestión de proyectos', isDefault: true },
+            { id: 'mt_status_es', name: 'Estado', level: 'Término', type: 'select', value: 'Aprobado (listo)', options: ['Aprobado (listo)', 'Pendiente (nuevo)', 'Prohibido (no usar)'], isDefault: true },
+            { id: 'mt_forbidden_es', name: 'Prohibido (booleano)', level: 'Término', type: 'select', value: 'No', options: ['Sí', 'No'], isDefault: true }, // Nuevo campo booleano de prohibición
+            { id: 'mt_pos_es', name: 'Categoría gramatical', level: 'Término', type: 'select', value: 'Sustantivo', options: ['Sustantivo', 'Verbo', 'Adjetivo', 'Adverbio'], isDefault: true }, 
+            { id: 'mt_context_es', name: 'Contexto', level: 'Término', type: 'textarea', value: 'La gestión es crítica en la traducción.', isDefault: true },
+            { id: 'mt_source_es', name: 'Fuente', level: 'Término', type: 'text', value: 'PMBOK Guide', parent: 'mt_context_es', isDefault: true }, 
+            
+            // EN - Nivel Idioma/Término
+            { id: 'mt_note_lang_en', name: 'Nota de Idioma', level: 'Idioma', type: 'text', value: 'Review UK vs US variants.', isDefault: true },
+            { id: 'mt_term_en', name: 'Término', level: 'Término', type: 'text', value: 'Project management', isDefault: true },
+            { id: 'mt_status_en', name: 'Estado', level: 'Término', type: 'select', value: 'Aprobado (listo)', options: ['Aprobado (listo)', 'Pendiente (nuevo)', 'Prohibido (no usar)'], isDefault: true },
+            { id: 'mt_forbidden_en', name: 'Prohibido (booleano)', level: 'Término', type: 'select', value: 'No', options: ['Sí', 'No'], isDefault: true },
+            { id: 'mt_pos_en', name: 'Categoría gramatical', level: 'Término', type: 'select', value: 'Noun', options: ['Noun', 'Verb', 'Adjective', 'Adverb'], isDefault: true }, 
+            { id: 'mt_context_en', name: 'Contexto', level: 'Término', type: 'textarea', value: 'It is the application of knowledge.', isDefault: true },
+            { id: 'mt_source_en', name: 'Fuente', level: 'Término', type: 'text', value: 'PMI Standard', parent: 'mt_context_en', isDefault: true },
+        ];
+
+        // Estructura fija de Phrase (destino)
+        const phraseFields = {
+            concept: [
+                { id: 'phrase_cid', name: 'conceptId', label: 'ID Concepto (CID)', type: 'text' },
+                { id: 'phrase_domain', name: 'domain', label: 'Dominio', type: 'text' }, // Mapeo de Área Temática
+                { id: 'phrase_def', name: 'conceptDefinition', label: 'Definición', type: 'textarea' },
+                { id: 'phrase_url', name: 'conceptURL', label: 'URL', type: 'text' },
+                { id: 'phrase_note_concept', name: 'conceptNote', label: 'Nota del Concepto', type: 'textarea' },
+            ],
+            term: [
+                { id: 'phrase_term', name: 'term', label: 'Término', type: 'text' },
+                { id: 'phrase_status', name: 'status', label: 'Estado (Approved/New)', type: 'text' },
+                { id: 'phrase_forbidden', name: 'forbidden', label: 'Prohibido (true/false)', type: 'text' },
+                { id: 'phrase_sensitive', name: 'caseSensitive', label: 'Sensible Mayús. (true/false)', type: 'text' },
+                { id: 'phrase_pos', name: 'partOfSpeech', label: 'Cat. gramatical (partOfSpeech)', type: 'text' },
+                { id: 'phrase_usage', name: 'usageNote', label: 'Uso (usageNote)', type: 'textarea' },
+                { id: 'phrase_note_term', name: 'termNote', label: 'Nota del término (termNote)', type: 'textarea' },
+            ]
+        };
+
+        // --- 2. LÓGICA DE RENDERIZADO Y MAPEO ---
+
+        /**
+         * Función principal que se llama cada vez que algo cambia.
+         */
+        function updateUI() {
+            renderMultitermFields();
+            const { phraseData, mapping } = calculatePhraseMapping();
+            
+            // Obtener el idioma seleccionado
+            const langSelector = document.getElementById('phrase-lang-selector');
+            const selectedLang = langSelector ? langSelector.value : 'es';
+            
+            renderPhraseFields(phraseData, selectedLang);
+            updateMultitermMappingView(mapping);
+            
+            // Actualizar nota de idioma
+            const langNote = document.getElementById('phrase-lang-note');
+            if (langNote) {
+                const langName = selectedLang === 'es' ? 'Español (ES)' : 'Inglés (EN)';
+                langNote.innerHTML = `Visualizando el bloque de idioma <b>${langName}</b>.`;
+            }
+        }
+
+        /**
+         * Genera el HTML para la columna de Multiterm basado en el estado `multitermFields`.
+         */
+        function renderMultitermFields() {
+            const container = document.getElementById('multiterm-fields-container');
+            container.innerHTML = ''; 
+
+            const fieldGroups = { Concepto: [], Idioma: [], Término: [] };
+            multitermFields.forEach(field => {
+                // Simplificamos la agrupación, sin romper la estructura de subordinación
+                if (field.level) {
+                    fieldGroups[field.level.includes('Término') ? 'Término' : field.level.includes('Idioma') ? 'Idioma' : field.level].push(field);
+                }
+            });
+
+            // Agrupar campos de idioma/término por ES/EN
+            const groups = {
+                Concepto: fieldGroups.Concepto.filter(f => !f.parent),
+                'Idioma (ES)': fieldGroups.Idioma.filter(f => !f.parent && f.id.endsWith('_es')),
+                'Término (ES)': fieldGroups.Término.filter(f => !f.parent && f.id.endsWith('_es')),
+                'Idioma (EN)': fieldGroups.Idioma.filter(f => !f.parent && f.id.endsWith('_en')),
+                'Término (EN)': fieldGroups.Término.filter(f => !f.parent && f.id.endsWith('_en')),
+            };
+            
+            // Filtrar campos que no son de idioma para el renderizado inicial (esto corrige campos que no se verían)
+             multitermFields.filter(f => !f.id.endsWith('_es') && !f.id.endsWith('_en')).forEach(field => {
+                 if (field.level === 'Concepto' && !field.parent) {
+                     groups.Concepto.push(field);
+                 }
+             });
+
+
+            ['Concepto', 'Idioma (ES)', 'Término (ES)', 'Idioma (EN)', 'Término (EN)'].forEach(level => {
+                 const fields = groups[level] || [];
+                 if (fields.length === 0) return;
+
+                 const levelWrapper = document.createElement('div');
+                 levelWrapper.className = 'mb-4';
+                 levelWrapper.innerHTML = `<h3 class="text-sm font-bold uppercase text-[--text-light] mb-2 border-b border-[--border-color] pb-1">${level}</h3>`;
+                 const levelContent = document.createElement('div');
+                 levelContent.className = 'space-y-3';
+                 
+                 fields.forEach(field => {
+                     levelContent.appendChild(createFieldRowHTML(field));
+                     // Buscar y renderizar hijos (subordinados)
+                     multitermFields.filter(f => f.parent === field.id).forEach(childField => {
+                         levelContent.appendChild(createFieldRowHTML(childField, true));
+                     });
+                 });
+                 
+                 levelWrapper.appendChild(levelContent);
+                 container.appendChild(levelWrapper);
+            });
+        }
+        
+        /**
+         * Crea el HTML para una sola fila de campo de Multiterm.
+         */
+        function createFieldRowHTML(field, isSubordinate = false) {
+            const row = document.createElement('div');
+            row.className = `field-row p-4 rounded-lg border ${isSubordinate ? 'ml-6 border-[--multiterm-bg]' : 'border-[--border-color]'} ${field.isDefault ? 'bg-white' : 'bg-[--custom-bg] border-[--custom-border]'}`;
+            
+            let inputElement = '';
+            const inputProps = `id="${field.id}" oninput="handleInput(event)" class="w-full p-2 border border-[--border-color] rounded-md mt-2 outline-none focus:ring-2 focus:ring-[--multiterm-header]"`;
+            
+            if (field.type === 'textarea') {
+                inputElement = `<textarea ${inputProps} rows="2">${field.value}</textarea>`;
+            } else if (field.type === 'number') {
+                 inputElement = `<input type="number" ${inputProps} value="${field.value}">`;
+            } else if (field.type === 'select') {
+                const optionsHtml = field.options.map(opt => 
+                    `<option value="${opt}" ${opt === field.value ? 'selected' : ''}>${opt}</option>`
+                ).join('');
+                inputElement = `<select ${inputProps}>${optionsHtml}</select>`;
+            } else {
+                 inputElement = `<input type="text" ${inputProps} value="${field.value}">`;
+            }
+
+            row.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="font-bold text-[--text-dark]">${field.name}</span>
+                        ${field.isDefault ? '' : '<span class="ml-2 text-xs font-bold text-[--warning-text] bg-[--warning-bg] px-2 py-0.5 rounded-full">Personalizado</span>'}
+                        ${isSubordinate ? '<span class="ml-2 text-xs font-medium text-gray-500">(Subordinado)</span>' : ''}
+                    </div>
+                    ${field.isDefault ? 
+                        (field.parent ? '' : `<button onclick="addSubfield('${field.id}')" class="text-xs font-medium text-[--multiterm-header] hover:underline">+ Sub-campo</button>`) : 
+                        `<button onclick="deleteField('${field.id}')" class="text-red-500 font-bold text-lg leading-none">&times;</button>`
+                    }
+                </div>
+                <!-- Etiqueta de Mapeo (se rellenará) -->
+                <div id="map_${field.id}" class="text-xs font-medium text-green-600 mt-1 h-4"></div>
+                ${inputElement}
+            `;
+            return row;
+        }
+
+        /**
+         * Calcula el estado de Phrase basado en los campos de Multiterm.
+         * Esta es la lógica central de la simulación.
+         */
+        function calculatePhraseMapping() {
+             // Reinicializar Phrase Data con valores vacíos para simular una nueva entrada
+            const phraseData = {
+                phrase_cid: '', phrase_domain: '', phrase_def: '', phrase_url: '', phrase_note_concept: '',
+                // ES
+                phrase_term_es: '', phrase_status_es: 'New', phrase_forbidden_es: 'false', phrase_sensitive_es: 'false', phrase_pos_es: '', phrase_usage_es: '', phrase_note_term_es: '',
+                // EN
+                phrase_term_en: '', phrase_status_en: 'New', phrase_forbidden_en: 'false', phrase_sensitive_en: 'false', phrase_pos_en: '', phrase_usage_en: '', phrase_note_term_en: '',
+            };
+            
+            const mapping = {};
+
+            multitermFields.forEach(field => {
+                const value = field.value;
+                if (!value) { mapping[field.id] = '<i>(Vacío)</i>'; return; }
+                
+                let mapTargetBase = '';
+                let mapTargetId = '';
+                
+                // Determinar el idioma y la clave de Phrase (ES o EN)
+                const lang = field.id.endsWith('_en') ? 'en' : 'es';
+                const phraseKey = (key) => `phrase_${key}_${lang}`;
+                
+                // Mapeo Nivel Concepto (1)
+                if (field.level === 'Concepto') {
+                    if (field.id === 'mt_cid') { mapTargetId = 'phrase_cid'; mapTargetBase = 'conceptId'; } 
+                    else if (field.id === 'mt_domain') { mapTargetId = 'phrase_domain'; mapTargetBase = 'domain'; }
+                    else if (field.id === 'mt_def') { mapTargetId = 'phrase_def'; mapTargetBase = 'conceptDefinition'; }
+                    else { mapTargetId = 'phrase_note_concept'; mapTargetBase = 'conceptNote (personalizado)'; }
+                    
+                    if (mapTargetId === 'phrase_note_concept') { phraseData[mapTargetId] += `[${field.name}]: ${value}\n`; } 
+                    else { phraseData[mapTargetId] = VALUE_MAP[value] || value; }
+                } 
+                
+                // Mapeo Nivel Idioma/Término (2/3)
+                else {
+                    
+                    if (field.level === 'Idioma') { // Nivel Idioma (Aplanamiento)
+                        phraseData[phraseKey('note_term')] += `[${field.name} (Nivel Idioma)]: ${value}\n`;
+                        mapTargetBase = 'termNote (aplanado)';
+                    }
+                    
+                    else if (field.level === 'Término') {
+                        if (field.id.startsWith('mt_term')) { mapTargetId = phraseKey('term'); mapTargetBase = 'term'; } 
+                        else if (field.id.startsWith('mt_pos')) { mapTargetId = phraseKey('pos'); mapTargetBase = 'partOfSpeech'; } 
+                        else if (field.id.startsWith('mt_context') && !field.parent) { mapTargetId = phraseKey('usage'); mapTargetBase = 'usageNote'; } 
+                        else if (field.parent && field.id.startsWith('mt_source')) { // Fuente subordinada
+                            if (phraseData[phraseKey('usage')]) {
+                                phraseData[phraseKey('usage')] += ` [Fuente: ${value}]`; // Fusión
+                                mapTargetBase = 'usageNote (fusión)';
+                            } else {
+                                phraseData[phraseKey('note_term')] += `[${field.name} (Sub)]: ${value}\n`;
+                                mapTargetBase = 'termNote (personalizado)';
+                            }
+                        }
+                        
+                        else if (field.id.startsWith('mt_status')) { // Mapeo de Estado Condicional
+                            const tbxStatus = VALUE_MAP[value] || 'New';
+                            phraseData[phraseKey('status')] = tbxStatus;
+                            
+                            if (tbxStatus === 'Forbidden') { phraseData[phraseKey('forbidden')] = 'true'; mapTargetBase = 'status & forbidden'; } 
+                            else { phraseData[phraseKey('forbidden')] = 'false'; mapTargetBase = 'status'; }
+                        }
+                        
+                        else if (field.id.startsWith('mt_forbidden')) { // Mapeo Prohibido Booleano Directo
+                            const isForbidden = VALUE_MAP[value] === 'true';
+                            phraseData[phraseKey('forbidden')] = isForbidden ? 'true' : 'false';
+                            mapTargetBase = 'forbidden (booleano)'; 
+                            // Si se marca como Prohibido, forzamos el estado a Forbidden (aunque el estado primario es preferido)
+                            if (isForbidden && phraseData[phraseKey('status')] !== 'Forbidden') {
+                                phraseData[phraseKey('status')] = 'Forbidden';
+                            }
+                        }
+
+                        else { // Personalizados
+                            phraseData[phraseKey('note_term')] += `[${field.name}]: ${value}\n`;
+                            mapTargetBase = 'termNote (personalizado)';
+                        }
+
+                         // Asignar el valor
+                        if (mapTargetId) {
+                            phraseData[mapTargetId] = VALUE_MAP[value] || value;
+                        }
+
+                    }
+                }
+
+                mapping[field.id] = mapTargetBase;
+            });
+            
+            return { phraseData, mapping };
+        }
+
+        /**
+         * Rellena la columna de Phrase con los datos calculados.
+         */
+        function renderPhraseFields(phraseData, selectedLang) {
+            const conceptContainer = document.getElementById('phrase-concept-fields');
+            const termContainer = document.getElementById('phrase-term-fields');
+            conceptContainer.innerHTML = '';
+            termContainer.innerHTML = '';
+            
+            const langKey = selectedLang === 'es' ? '_es' : '_en';
+
+            // Render Concept Fields (Conceptos son globales, no necesitan el sufijo de idioma)
+            phraseFields.concept.forEach(field => {
+                conceptContainer.appendChild(createPhraseFieldHTML(field, phraseData[field.id]));
+            });
+            
+            // Render Term Fields (Son específicos del idioma)
+            phraseFields.term.forEach(field => {
+                termContainer.appendChild(createPhraseFieldHTML(field, phraseData[`phrase_${field.id}${langKey}`]));
+            });
+        }
+
+        /**
+         * Crea el HTML para una fila de campo FIJA de Phrase.
+         */
+        function createPhraseFieldHTML(field, value) {
+            const row = document.createElement('div');
+            row.className = 'field-row-phrase p-3 rounded-lg border border-green-200 bg-white';
+            
+            let displayValue = value || '<i class="text-gray-400">Vacío</i>';
+            let valueClass = 'text-gray-800';
+            
+            // Estilos de resaltado
+            if (field.id === 'phrase_usage' && value && value.includes('[')) {
+                valueClass = 'text-blue-700 font-medium'; // Fusión
+            }
+            if (field.id === 'phrase_note_term' && value) {
+                valueClass = 'text-amber-700 font-medium'; // Aplanamiento / Personalizado
+            }
+            if (field.id === 'phrase_forbidden' && value === 'true') {
+                 valueClass = 'text-red-600 font-bold'; // Prohibido
+            }
+            
+            let element = '';
+            if (field.type === 'textarea') {
+                element = `<div id="${field.id}" class="w-full p-2 mt-1 min-h-[50px] whitespace-pre-wrap ${valueClass}">${displayValue}</div>`;
+            } else {
+                element = `<div id="${field.id}" class="w-full p-2 mt-1 min-h-[38px] ${valueClass}">${displayValue}</div>`;
+            }
+
+            row.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <span class="font-bold text-[--text-dark]">${field.label}</span>
+                    <span class="text-xs font-mono text-green-700 bg-green-100 px-2 py-0.5 rounded-full">${field.name}</span>
+                </div>
+                ${element}
+            `;
+            return row;
+        }
+
+        /**
+         * Actualiza las etiquetas de mapeo en la columna de Multiterm.
+         */
+        function updateMultitermMappingView(mapping) {
+            for (const fieldId in mapping) {
+                const mapLabel = document.getElementById(`map_${fieldId}`);
+                if (mapLabel) {
+                    let mapText = mapping[fieldId];
+                    let mapClass = "text-green-600"; // Mapeo 1:1
+
+                    if (mapText.includes('aplanado')) {
+                        mapClass = "text-amber-600";
+                    } else if (mapText.includes('fusión')) {
+                        mapClass = "text-blue-600";
+                    } else if (mapText.includes('personalizado')) {
+                        mapClass = "text-amber-700";
+                    } else if (mapText.includes('Vacío')) {
+                         mapClass = "text-gray-400";
+                    } else if (mapText.includes('status & forbidden')) {
+                         mapClass = "text-red-600 font-bold";
+                         mapText = 'status / forbidden (Condicional)';
+                    } else if (mapText.includes('forbidden (booleano)')) {
+                         mapClass = "text-red-600 font-bold";
+                    }
+
+
+                    mapLabel.innerHTML = `&rarr; ${mapText}`;
+                    mapLabel.className = `text-xs font-bold mt-1 h-4 ${mapClass}`;
+                }
+            }
+        }
+
+        // --- 3. MANEJADORES DE EVENTOS ---
+
+        /**
+         * Actualiza el valor de un campo en el estado `multitermFields` y refresca la UI.
+         */
+        function handleInput(event) {
+            const fieldId = event.target.id;
+            const value = event.target.value;
+            const field = multitermFields.find(f => f.id === fieldId);
+            if (field) {
+                // Actualizar el valor del campo
+                field.value = value;
+
+                // Si es un campo de lista, también actualizar la opción seleccionada internamente
+                if (field.type === 'select') {
+                    const selectElement = document.getElementById(fieldId);
+                    if (selectElement) {
+                        const selectedOption = selectElement.options[selectElement.selectedIndex].value;
+                        field.value = selectedOption;
+                    }
+                }
+            }
+            
+            // Recalcular y actualizar la UI
+            updateUI();
+        }
+
+
+        /**
+         * Añade un nuevo campo personalizado a la estructura de Multiterm.
+         */
+        function addField() {
+            const nameInput = document.getElementById('newFieldName');
+            const levelSelect = document.getElementById('newFieldLevel');
+            const name = nameInput.value.trim();
+            const level = levelSelect.value;
+            
+            if (!name) {
+                alert('Por favor, introduce un nombre para el campo.');
+                return;
+            }
+
+            multitermFields.push({
+                id: `custom_${Date.now()}`,
+                name: name,
+                level: level,
+                type: 'text',
+                value: '',
+                isDefault: false
+            });
+
+            nameInput.value = ''; // Limpiar input
+            updateUI(); // Renderizar toda la UI
+        }
+
+        /**
+         * Añade un sub-campo (simulando subordinación).
+         */
+        function addSubfield(parentId) {
+            const parentField = multitermFields.find(f => f.id === parentId);
+            if (!parentField) return;
+
+            const name = prompt(`Introduce el nombre del sub-campo para "${parentField.name}":`);
+            if (!name || !name.trim()) return;
+
+            // Determinar el sufijo del idioma para el nuevo campo
+            const langSuffix = parentField.id.endsWith('_en') ? '_en' : parentField.id.endsWith('_es') ? '_es' : '';
+
+
+            multitermFields.push({
+                id: `custom_sub_${Date.now()}${langSuffix}`,
+                name: name.trim(),
+                level: parentField.level, // Mismo nivel que el padre
+                parent: parentId, // Enlace al padre
+                type: 'text',
+                value: '',
+                isDefault: false
+            });
+            
+            updateUI();
+        }
+
+        /**
+         * Elimina un campo personalizado.
+         */
+        function deleteField(fieldId) {
+            if (confirm('¿Estás seguro de que quieres eliminar este campo personalizado?')) {
+                multitermFields = multitermFields.filter(f => f.id !== fieldId && f.parent !== fieldId); // Eliminar campo y sus hijos
+                updateUI();
+            }
+        }
+        
+        /**
+         * Reinicia los valores por defecto (ejecutado al inicio y por botón)
+         */
+        function resetDefaultValues() {
+            // Eliminar campos personalizados
+            multitermFields = multitermFields.filter(f => f.isDefault);
+            
+            // Resetear valores por defecto
+            multitermFields.forEach(field => {
+                 if (field.id === 'mt_cid') field.value = '1001';
+                 else if (field.id === 'mt_def') field.value = 'Definición a nivel de concepto.';
+                 else if (field.id === 'mt_note_lang') field.value = 'Nota solo para este idioma.';
+                 else if (field.id === 'mt_term') field.value = 'Término principal';
+                 else if (field.id === 'mt_pos') field.value = 'Sustantivo';
+                 else if (field.id === 'mt_context') field.value = 'Este es el contexto de uso.';
+                 else if (field.id === 'mt_source') field.value = 'Manual Tècnico, p. 5';
+                 else if (field.id === 'mt_domain') field.value = 'Tecnología';
+                 else if (field.id.includes('forbidden')) field.value = 'No';
+                 else if (field.id.includes('status')) field.value = 'Aprobado (listo)';
+                 else if (field.id.includes('case_sensitive')) field.value = 'No';
+            });
+            
+            updateUI();
+        }
+        
+        // --- 4. INICIALIZACIÓN ---
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            updateUI();
+            
+            // Asignar el reinicio a la función del botón (SAFE ASSIGNMENT)
+            const resetButton = document.getElementById('reset-all-data');
+            if (resetButton) {
+                resetButton.addEventListener('click', resetDefaultValues);
+            }
+        });
+
+    </script>
+</body>
+</html>
