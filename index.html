@@ -98,22 +98,7 @@
             </p>
         </div>
 
-        <!-- 3. Panel de Control de Simulación -->
-        <div class="mb-6 p-5 bg-white rounded-xl shadow-sm border border-[--border-color]">
-            <h3 class="text-lg font-bold mb-3">Añadir campo personalizado a Multiterm</h3>
-            <div class="flex flex-wrap gap-4">
-                <input type="text" id="newFieldName" placeholder="Nombre del campo (ej. Revisado por)" class="flex-grow p-3 border border-[--border-color] rounded-lg focus:ring-2 focus:ring-[--multiterm-header] outline-none">
-                <select id="newFieldLevel" class="p-3 border border-[--border-color] rounded-lg bg-white focus:ring-2 focus:ring-[--multiterm-header] outline-none">
-                    <option value="Concepto">Nivel concepto</option>
-                    <option value="Idioma">Nivel idioma</option>
-                    <option value="Término" selected>Nivel término</option>
-                </select>
-                <button onclick="addField()" class="py-3 px-5 bg-[--multiterm-header] text-white font-bold rounded-lg hover:bg-opacity-80 transition-colors">
-                    Añadir campo
-                </button>
-            </div>
-        </div>
-
+        <!-- 3. Panel de Control de Simulación (Eliminado) -->
         <!-- 4. El Simulador (Grid de 2 Columnas) -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
 
@@ -242,21 +227,13 @@
         };
 
         // Estado inicial de la base de datos de Multiterm (flexible)
+        // NOTA: Se ha eliminado la lógica de 'isCustom' ya que no se pueden añadir, pero se mantiene la estructura inicial.
         let multitermFields = [
             { id: 'mt_cid', name: 'ID Concepto', level: 'Concepto', type: 'number', value: '1001', isDefault: true },
             { id: 'mt_domain', name: 'Área Temática', level: 'Concepto', type: 'select', value: 'Tecnología', options: ['Tecnología', 'Medicina'], isDefault: true }, // Nuevo campo Dominio
             { id: 'mt_def', name: 'Definición', level: 'Concepto', type: 'textarea', value: 'Definición a nivel de concepto.', isDefault: true },
             
-            // ES - Nivel Idioma/Término
-            { id: 'mt_note_lang_es', name: 'Nota de Idioma', level: 'Idioma', type: 'text', value: 'Nota solo para este idioma.', isDefault: true },
-            { id: 'mt_term_es', name: 'Término', level: 'Término', type: 'text', value: 'Gestión de proyectos', isDefault: true },
-            { id: 'mt_status_es', name: 'Estado', level: 'Término', type: 'select', value: 'Aprobado (listo)', options: ['Aprobado (listo)', 'Pendiente (nuevo)', 'Prohibido (no usar)'], isDefault: true },
-            { id: 'mt_forbidden_es', name: 'Prohibido (booleano)', level: 'Término', type: 'select', value: 'No', options: ['Sí', 'No'], isDefault: true }, // Nuevo campo booleano de prohibición
-            { id: 'mt_pos_es', name: 'Categoría gramatical', level: 'Término', type: 'select', value: 'Sustantivo', options: ['Sustantivo', 'Verbo', 'Adjetivo', 'Adverbio'], isDefault: true }, 
-            { id: 'mt_context_es', name: 'Contexto', level: 'Término', type: 'textarea', value: 'La gestión es crítica en la traducción.', isDefault: true },
-            { id: 'mt_source_es', name: 'Fuente', level: 'Término', type: 'text', value: 'PMBOK Guide', parent: 'mt_context_es', isDefault: true }, 
-            
-            // EN - Nivel Idioma/Término
+            // EN - Nivel Idioma/Término (Primario)
             { id: 'mt_note_lang_en', name: 'Nota de Idioma', level: 'Idioma', type: 'text', value: 'Review UK vs US variants.', isDefault: true },
             { id: 'mt_term_en', name: 'Término', level: 'Término', type: 'text', value: 'Project management', isDefault: true },
             { id: 'mt_status_en', name: 'Estado', level: 'Término', type: 'select', value: 'Aprobado (listo)', options: ['Aprobado (listo)', 'Pendiente (nuevo)', 'Prohibido (no usar)'], isDefault: true },
@@ -264,6 +241,15 @@
             { id: 'mt_pos_en', name: 'Categoría gramatical', level: 'Término', type: 'select', value: 'Noun', options: ['Noun', 'Verb', 'Adjective', 'Adverb'], isDefault: true }, 
             { id: 'mt_context_en', name: 'Contexto', level: 'Término', type: 'textarea', value: 'It is the application of knowledge.', isDefault: true },
             { id: 'mt_source_en', name: 'Fuente', level: 'Término', type: 'text', value: 'PMI Standard', parent: 'mt_context_en', isDefault: true },
+            
+            // ES - Nivel Idioma/Término (Secundario)
+            { id: 'mt_note_lang_es', name: 'Nota de Idioma', level: 'Idioma', type: 'text', value: 'Nota solo para este idioma.', isDefault: true },
+            { id: 'mt_term_es', name: 'Término', level: 'Término', type: 'text', value: 'Gestión de proyectos', isDefault: true },
+            { id: 'mt_status_es', name: 'Estado', level: 'Término', type: 'select', value: 'Aprobado (listo)', options: ['Aprobado (listo)', 'Pendiente (nuevo)', 'Prohibido (no usar)'], isDefault: true },
+            { id: 'mt_forbidden_es', name: 'Prohibido (booleano)', level: 'Término', type: 'select', value: 'No', options: ['Sí', 'No'], isDefault: true }, // Nuevo campo booleano de prohibición
+            { id: 'mt_pos_es', name: 'Categoría gramatical', level: 'Término', type: 'select', value: 'Sustantivo', options: ['Sustantivo', 'Verbo', 'Adjetivo', 'Adverbio'], isDefault: true }, 
+            { id: 'mt_context_es', name: 'Contexto', level: 'Término', type: 'textarea', value: 'La gestión es crítica en la traducción.', isDefault: true },
+            { id: 'mt_source_es', name: 'Fuente', level: 'Término', type: 'text', value: 'PMBOK Guide', parent: 'mt_context_es', isDefault: true }, 
         ];
 
         // Estructura fija de Phrase (destino)
@@ -370,7 +356,8 @@
          */
         function createFieldRowHTML(field, isSubordinate = false) {
             const row = document.createElement('div');
-            row.className = `field-row p-4 rounded-lg border ${isSubordinate ? 'ml-6 border-[--multiterm-bg]' : 'border-[--border-color]'} ${field.isDefault ? 'bg-white' : 'bg-[--custom-bg] border-[--custom-border]'}`;
+            // Ya no hay campos personalizados, así que el color de fondo es fijo
+            row.className = `field-row p-4 rounded-lg border ${isSubordinate ? 'ml-6 border-[--multiterm-bg]' : 'border-[--border-color]'} bg-white`;
             
             let inputElement = '';
             const inputProps = `id="${field.id}" oninput="handleInput(event)" class="w-full p-2 border border-[--border-color] rounded-md mt-2 outline-none focus:ring-2 focus:ring-[--multiterm-header]"`;
@@ -392,18 +379,15 @@
                 <div class="flex justify-between items-center">
                     <div>
                         <span class="font-bold text-[--text-dark]">${field.name}</span>
-                        ${field.isDefault ? '' : '<span class="ml-2 text-xs font-bold text-[--warning-text] bg-[--warning-bg] px-2 py-0.5 rounded-full">Personalizado</span>'}
                         ${isSubordinate ? '<span class="ml-2 text-xs font-medium text-gray-500">(Subordinado)</span>' : ''}
                     </div>
-                    ${field.isDefault ? 
-                        (field.parent ? '' : `<button onclick="addSubfield('${field.id}')" class="text-xs font-medium text-[--multiterm-header] hover:underline">+ Sub-campo</button>`) : 
-                        `<button onclick="deleteField('${field.id}')" class="text-red-500 font-bold text-lg leading-none">&times;</button>`
-                    }
+                    ${field.parent ? '' : `<button onclick="addSubfield('${field.id}')" class="text-xs font-medium text-[--multiterm-header] hover:underline">+ Sub-campo</button>`}
                 </div>
                 <!-- Etiqueta de Mapeo (se rellenará) -->
                 <div id="map_${field.id}" class="text-xs font-medium text-green-600 mt-1 h-4"></div>
                 ${inputElement}
             `;
+            // El botón de borrar campo personalizado se elimina.
             return row;
         }
 
@@ -485,7 +469,7 @@
                             }
                         }
 
-                        else { // Personalizados
+                        else { // Personalizados (Esta rama teóricamente no se alcanzará si se eliminó el botón de añadir)
                             phraseData[phraseKey('note_term')] += `[${field.name}]: ${value}\n`;
                             mapTargetBase = 'termNote (personalizado)';
                         }
@@ -624,36 +608,7 @@
         }
 
 
-        /**
-         * Añade un nuevo campo personalizado a la estructura de Multiterm.
-         */
-        function addField() {
-            const nameInput = document.getElementById('newFieldName');
-            const levelSelect = document.getElementById('newFieldLevel');
-            const name = nameInput.value.trim();
-            const level = levelSelect.value;
-            
-            if (!name) {
-                alert('Por favor, introduce un nombre para el campo.');
-                return;
-            }
-
-            multitermFields.push({
-                id: `custom_${Date.now()}`,
-                name: name,
-                level: level,
-                type: 'text',
-                value: '',
-                isDefault: false
-            });
-
-            nameInput.value = ''; // Limpiar input
-            updateUI(); // Renderizar toda la UI
-        }
-
-        /**
-         * Añade un sub-campo (simulando subordinación).
-         */
+        // Estas funciones se eliminan o se ajustan al no poder añadir/borrar campos personalizados
         function addSubfield(parentId) {
             const parentField = multitermFields.find(f => f.id === parentId);
             if (!parentField) return;
@@ -678,21 +633,15 @@
             updateUI();
         }
 
-        /**
-         * Elimina un campo personalizado.
-         */
         function deleteField(fieldId) {
-            if (confirm('¿Estás seguro de que quieres eliminar este campo personalizado?')) {
-                multitermFields = multitermFields.filter(f => f.id !== fieldId && f.parent !== fieldId); // Eliminar campo y sus hijos
-                updateUI();
-            }
+            // Ya no hay campos custom por defecto que el usuario pueda borrar con el botón de deleteField
         }
         
         /**
          * Reinicia los valores por defecto (ejecutado al inicio y por botón)
          */
         function resetDefaultValues() {
-            // Eliminar campos personalizados
+            // Eliminar campos personalizados (no debería haber, pero por si acaso)
             multitermFields = multitermFields.filter(f => f.isDefault);
             
             // Resetear valores por defecto
